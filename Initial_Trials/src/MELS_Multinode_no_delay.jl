@@ -2,6 +2,8 @@ using JuMP
 using Gurobi
 using MathOptInterface
 const MOI = MathOptInterface
+using Plots
+
 
 ###############################################################################
 # 1. Define sets
@@ -96,8 +98,7 @@ push!(outgoing_connections[(3, 2)], 2)
 combinations = [(e, n, t) for e in E for n in N[e] for t in Tset]
 d = Dict(comb => 0.0 for comb in combinations)
 
-## lead time
-l = 1
+
 
 # NO EXTERNAL DEMAND FOR INTERMEDIATE NODES
 
@@ -255,10 +256,10 @@ for e in 1:K
                 I[e, n, t] + outbound
             )
 
-            if e > 1 && t - l > 0
+            if e > 1 > 0
                 for m in incoming_connections[(e, n)]
                     @constraint(model,
-                        J[e, n, m, t-1] + f[e-1, m, n, t-l]
+                        J[e, n, m, t-1] + f[e-1, m, n, t]
                         ==
                         J[e, n, m, t] + alpha[e, n, m] * x[e, n, t]
                     )
@@ -272,7 +273,7 @@ end
 for e in K+1:E_max
     for n in N[e]
         for t in Tset
-            inbound = (e == 1) ? 0 : sum(f[e-l, j, n, t] for j in incoming_connections[(e, n)])
+            inbound = (e == 1) ? 0 : sum(f[e-1, j, n, t] for j in incoming_connections[(e, n)])
             outbound = (e == maximum(E)) ? 0 : sum(f[e, n, m, t] for m in outgoing_connections[(e, n)])
             @constraint(model,
                 I[e, n, t-1] + inbound
@@ -319,3 +320,100 @@ for e in E[1:end-1], n in N[e], m in N[e+1], t in Tset
     println("f[$e,$n => $m, t=$t] = ", value(f[e, n, m, t]),
         ", cost=", s[(e, n, m, t)])
 end
+
+# Time sets
+time_prod = Tset           # For production and shipping, use t = 1:6
+time_inv = 0:maximum(Tset) # For inventory, note that t starts at 0
+
+########################################################################
+# 1. Plot Production (x): for each echelon and each node
+########################################################################
+for e in E
+    for n in N[e]
+        # Extract production values over time
+        prod = [value(x[e, n, t]) for t in time_prod]
+
+        # Create a line plot for production
+        p = plot(time_prod, prod,
+            marker=:circle,
+            lw=2,
+            label="Production",
+            title="Production at Echelon $e, Node $n",
+            xlabel="Time Period",
+            ylabel="Production")
+
+        # Save the plot as a PNG file in the designated folder
+        savefig(p, "img/cement/production_e$(e)_node$(n).png")
+    end
+end
+
+########################################################################
+# 2. Plot Inventory (I): for each echelon and each node
+########################################################################
+for e in E
+    for n in N[e]
+        # Extract inventory values over time (including period 0)
+        inv = [value(I[e, n, t]) for t in time_inv]
+
+        # Create a line plot for inventory
+        p = plot(time_inv, inv,
+            marker=:circle,
+            lw=2,
+            label="Inventory",
+            title="Inventory at Echelon $e, Node $n",
+            xlabel="Time Period",
+            ylabel="Inventory")
+
+        # Save the plot as a PNG file
+        savefig(p, "img/cement/inventory_e$(e)_node$(n).png")
+    end
+end
+
+########################################################################
+# 3. Plot Shipping Flows (f): for each node in each echelon (except the last)
+#    Plot all shipping flows from the node (one line per destination node)
+########################################################################
+for e in 1:(E_max-1)  # only echelons that ship to a subsequent echelon
+    for n in N[e]
+        # Only plot if there are defined outgoing connections
+        if !isempty(outgoing_connections[(e, n)])
+            # Create an empty plot
+            p = plot(title="Shipping Flows from Echelon $e, Node $n",
+                xlabel="Time Period",
+                ylabel="Shipping Flow")
+
+            # Loop over each outgoing connection (destination node in echelon e+1)
+            for m in outgoing_connections[(e, n)]
+                # Extract shipping flow values over time
+                flow = [value(f[e, n, m, t]) for t in time_prod]
+                # Add a line for this destination node
+                plot!(p, time_prod, flow,
+                    marker=:circle,
+                    lw=2,
+                    label="To Node $m (Echelon $(e+1))")
+            end
+
+            # Save the shipping flows plot as a PNG file
+            savefig(p, "img/cement/shipping_e$(e)_node$(n).png")
+        end
+    end
+end
+
+########################################################################
+# 4. Plot Electricity Prices over Time
+########################################################################
+# Electricity prices are stored in the dictionary elec_price.
+# We assume elec_price[t] is defined for each period in Tset.
+elec_prices = [elec_price[t] for t in Tset]
+
+p_elec = plot(Tset, elec_prices,
+    marker=:circle,
+    lw=2,
+    label="Electricity Price",
+    title="Electricity Prices over Time",
+    xlabel="Time Period",
+    ylabel="Price (\$/kWh)",
+    legend=:topright)
+
+# Save the electricity prices plot
+savefig(p_elec, "img/cement/electricity_prices.png")
