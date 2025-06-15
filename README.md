@@ -1,14 +1,40 @@
-# Reimagining Supply Chains in an Era of Increased Renewable Energy Penetration
-Repository for Final Year Project at Imperial College for my MEng Electronic and Information Engineering degree.
+## 🗂️ Codebase Organisation
 
-## Description
-There is a dramatic increase in the penetration of Variable Renewable Energy (VRE) (wind and solar photovoltaic (PV)), in electricity grids globally. This presents technical and economic “grid integration”
-challenges that can be split into two main buckets: 
+The project repository is organised into two main directories:
 
-- the technology challenge, related to the interfacing of the VRE into the grids via power electronics at very short time scales, seconds and below and
-  
--  the balancing challenge, related to the variability and predictability of the primary energy resources i.e. the wind and sun at longer time scales, minutes to decades.
+- `data/`: Contains all input datasets, including time series electricity price data from the  
+  [NREL Cambium dataset](https://www.nrel.gov/analysis/cambium). This project uses data specific to the CAISO region.
 
-The balancing challenge at time scales of minutes to days has viable solutions which are already deployed and are scaling up in parallel with the penetration of VRE. These include storage (i.e. batteries and pumped storage), demand side management and non VRE generation (i.e. fossil fuel, carbon capture, nuclear, non-variable renewables). Longer-term imbalances (weeks, seasons, years) require very significant volumes of energy stored over long periods making storage solutions extremely uneconomic, and most of the current demand side is not capable of flexibility over these time frames.
+- `src/`: Contains all modelling scripts, grouped by experiment type. Each experiment has:
+  - A Julia script to run the optimisation model
+  - A `results/` subfolder where output Excel files are saved
+  - A MATLAB script to analyse the results
 
-This project aims to illustrate proof of principle of this concept of long-term demand side management, followed by engineering, economic and societal impact and acceptance
+### 🔬 Experiment Directory Structure
+
+| Experiment | Description | Julia Script | MATLAB Analysis |
+|------------|-------------|--------------|------------------|
+| **OPEX Planning – Zero Inventory** | Models short-term operational expenditure without storage flexibility | [`zero_inventory.jl`](src/OPEX_zero_inventory/zero_inventory.jl) | [`analysis.m`](src/OPEX_zero_inventory/results/analysis.m) |
+| **OPEX Planning – Infinite Inventory** | Allows full inventory flexibility to evaluate the upper bound of DSM value | [`infinite_inventory.jl`](src/OPEX_infinite_inventory/infinite_inventory.jl) | [`analysis.m`](src/OPEX_infinite_inventory/results/analysis.m) |
+| **Capacity Experiments** | Tests the effect of varying production and storage capacity levels | [`cap_experiment.jl`](src/OPEX_capacity_experiments/cap_experiment.jl) | [`analysis.m`](src/OPEX_capacity_experiments/results/analysis.m) |
+| **CAPEX-OPEX Planning** | Jointly optimises capital investment and operational cost across the supply chain | [`capex_opex.jl`](src/CAPEX_OPEX_Planning/capex_opex.jl) | [`analysis.m`](src/CAPEX_OPEX_Planning/results/analysis.m) |
+
+> 💡 All results are written to Excel format in each experiment's `results/` folder.
+
+---
+
+### ⚠️ Notes on Output Files
+
+If you wish to rerun any of the Julia experiments, you **must** update the output file path defined within each script.  
+By default, output files are saved with names like `2025a.xlsx` or `2050a.xlsx`, and running a script without renaming this path may overwrite existing results.
+
+#### Example
+
+To run the **infinite inventory** experiment:
+
+1. Open the file [`src/OPEX_infinite_inventory/infinite_inventory.jl`](src/OPEX_infinite_inventory/infinite_inventory.jl)  
+2. Scroll to the bottom and locate the following lines:
+
+   ```julia
+   run_scenario("../data/CAISO_MC_2050.xlsx", "2050a")
+   run_scenario("../data/CAISO_MC_2025.xlsx", "2025a")
