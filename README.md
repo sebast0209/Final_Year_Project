@@ -1,3 +1,32 @@
+# Reimagining Supply Chains in an Era of Increased Renewable Energy Penetration
+
+> **Final Year Project**  
+> MEng Electronic and Information Engineering, Imperial College London
+
+This project investigates the potential of long-term Demand-Side Management (DSM) in energy-intensive industrial supply chains under increasing electricity price volatility driven by renewable energy integration. A model of a cement supply chain—including raw material extraction, intermediate processing, and distribution of two cement products (Ordinary Portland Cement and Portland Pozzolana Cement)—was first developed and formulated as a large-scale mixed-integer linear program. This optimisation framework, implemented in JuMP and solved using Gurobi, co-optimises capital investment and operational expenditure (OPEX). To extract insights, the model was applied to a real-world case study using production parameters from a cement plant in India and electricity price data from the National Renewable Energy Laboratory’s Cambium dataset.
+
+
+The model captures hourly dynamics in production, storage, and logistics across a one-year horizon, enabling analysis of cost-saving opportunities through strategic load shifting and inventory control. Simulations are conducted using real-world production parameters from a cement facility in India, under scenarios with differing levels of storage and production flexibility.
+
+## 📋 Requirements
+
+Ensure the following Julia packages are installed:
+
+- [`JuMP.jl`](https://jump.dev/) — Mathematical optimization modeling language  
+- [`Gurobi.jl`](https://github.com/jump-dev/Gurobi.jl) — Interface to the Gurobi solver  
+- [`MathOptInterface.jl`](https://github.com/jump-dev/MathOptInterface.jl) — Backend interface for optimization  
+- [`Plots.jl`](https://github.com/JuliaPlots/Plots.jl) — Plotting and visualization  
+- [`XLSX.jl`](https://github.com/felipenoris/XLSX.jl) — Read/write Excel files  
+- [`DataFrames.jl`](https://github.com/JuliaData/DataFrames.jl) — Data manipulation  
+- [`Dates`](https://docs.julialang.org/en/v1/stdlib/Dates/) — Built-in Julia date utilities  
+- [`Statistics`](https://docs.julialang.org/en/v1/stdlib/Statistics/) — Basic statistical functions  
+- [`FileIO.jl`](https://github.com/JuliaIO/FileIO.jl) — Unified file loading interface  
+
+> 💡 Make sure Gurobi is installed separately and your license is activated.
+
+---
+
+
 ## 🗂️ Codebase Organisation
 
 The project repository is organised into two main directories:
